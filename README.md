@@ -66,4 +66,9 @@ Complete. The project is a self-contained, working demo with no known build issu
 
 ## Screenshots
 
-![Windows 12 web desktop](screenshots/demo.png)
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/demo.png"><br><sub>Desktop with live weather, taskbar & start</sub></td>
+    <td align="center"><img src="screenshots/demo2.png"><br><sub>Multiple apps open — Calculator, Paint & Minesweeper with a working window manager</sub></td>
+  </tr>
+</table>
