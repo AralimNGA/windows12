@@ -66,4 +66,4 @@ Complete. The project is a self-contained, working demo with no known build issu
 
 ## Screenshots
 
-_Screenshots coming soon._
+![Windows 12 web desktop](screenshots/demo.png)
