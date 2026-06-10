@@ -1,0 +1,33 @@
+# OS files
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node
+node_modules/
+**/node_modules/
+
+# Python
+.venv/
+venv/
+**/__pycache__/
+__pycache__/
+*.pyc
+
+# Build output
+dist/
+build/
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swiftpm
+DerivedData/
+
+# Environment / secrets
+.env
+.env.local
+**/.env

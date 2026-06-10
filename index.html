@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Windows 12</title>
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- ============ BOOT SCREEN ============ -->
+  <div id="boot-screen" class="screen">
+    <div class="boot-logo">
+      <svg viewBox="0 0 88 88" width="92" height="92">
+        <rect x="4"  y="4"  width="38" height="38" rx="3" fill="#50b0f0"/>
+        <rect x="46" y="4"  width="38" height="38" rx="3" fill="#50b0f0"/>
+        <rect x="4"  y="46" width="38" height="38" rx="3" fill="#50b0f0"/>
+        <rect x="46" y="46" width="38" height="38" rx="3" fill="#50b0f0"/>
+      </svg>
+    </div>
+    <div class="boot-spinner"></div>
+    <div class="boot-text">Windows 12 wird gestartet…</div>
+  </div>
+
+  <!-- ============ LOCK / LOGIN SCREEN ============ -->
+  <div id="lock-screen" class="screen hidden">
+    <div class="lock-clock">
+      <div id="lock-time">--:--</div>
+      <div id="lock-date">Lädt…</div>
+    </div>
+    <div class="lock-login">
+      <div class="avatar">
+        <svg viewBox="0 0 24 24" width="64" height="64" fill="#fff">
+          <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 6v2h18v-2c0-3.5-4-6-9-6Z"/>
+        </svg>
+      </div>
+      <div class="user-name">Admin</div>
+      <form id="login-form" autocomplete="off">
+        <input type="password" id="pw" placeholder="PIN eingeben (egal welche)" />
+        <button type="submit" class="login-arrow">→</button>
+      </form>
+      <div class="lock-hint">Drücke Enter zum Anmelden</div>
+    </div>
+  </div>
+
+  <!-- ============ DESKTOP ============ -->
+  <div id="desktop" class="screen hidden">
+    <div id="desktop-icons"></div>
+
+    <!-- Selection rectangle -->
+    <div id="select-box"></div>
+
+    <!-- Windows render here -->
+    <div id="window-layer"></div>
+
+    <!-- Snap layout overlay -->
+    <div id="snap-overlay" class="hidden"></div>
+
+    <!-- Context menu -->
+    <div id="context-menu" class="ctx-menu hidden"></div>
+
+    <!-- Start menu -->
+    <div id="start-menu" class="hidden">
+      <div class="start-search">
+        <span class="search-ico">🔍</span>
+        <input type="text" id="start-search-input" placeholder="Apps, Einstellungen und Dokumente suchen">
+      </div>
+      <div class="start-section-label">Angeheftet</div>
+      <div id="start-pinned" class="start-grid"></div>
+      <div class="start-section-label">Empfohlen</div>
+      <div id="start-recommended" class="start-recommended"></div>
+      <div class="start-footer">
+        <div class="start-user">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5 0-9 2.5-9 6v2h18v-2c0-3.5-4-6-9-6Z"/></svg>
+          <span>Admin</span>
+        </div>
+        <button id="power-btn" title="Ein/Aus">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v9"/><path d="M6.5 7a8 8 0 1 0 11 0"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Action / Notification center -->
+    <div id="action-center" class="hidden">
+      <div class="ac-tiles">
+        <div class="ac-tile active" data-toggle="wifi"><span>📶</span><label>WLAN</label></div>
+        <div class="ac-tile active" data-toggle="bt"><span>🔵</span><label>Bluetooth</label></div>
+        <div class="ac-tile" data-toggle="airplane"><span>✈️</span><label>Flugmodus</label></div>
+        <div class="ac-tile" data-toggle="theme"><span>🌙</span><label>Dunkelmodus</label></div>
+        <div class="ac-tile" data-toggle="night"><span>🌅</span><label>Nachtmodus</label></div>
+        <div class="ac-tile active" data-toggle="save"><span>🔋</span><label>Energiesparen</label></div>
+      </div>
+      <div class="ac-slider">
+        <span>🔊</span>
+        <input type="range" id="vol-slider" min="0" max="100" value="65">
+      </div>
+      <div class="ac-slider">
+        <span>☀️</span>
+        <input type="range" id="bri-slider" min="20" max="100" value="100">
+      </div>
+    </div>
+
+    <!-- Calendar flyout -->
+    <div id="calendar-flyout" class="hidden">
+      <div class="cal-big-time" id="cal-big-time">--:--:--</div>
+      <div class="cal-big-date" id="cal-big-date"></div>
+      <div class="cal-head">
+        <button id="cal-prev">‹</button>
+        <span id="cal-month"></span>
+        <button id="cal-next">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- ============ TASKBAR ============ -->
+    <div id="taskbar">
+      <div class="tb-left">
+        <div class="tb-weather" id="tb-weather">⛅ 18°C</div>
+      </div>
+      <div class="tb-center" id="tb-center">
+        <button class="tb-btn tb-start" id="start-btn" title="Start">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <rect x="2"  y="2"  width="9" height="9" rx="1.5" fill="#50b0f0"/>
+            <rect x="13" y="2"  width="9" height="9" rx="1.5" fill="#50b0f0"/>
+            <rect x="2"  y="13" width="9" height="9" rx="1.5" fill="#50b0f0"/>
+            <rect x="13" y="13" width="9" height="9" rx="1.5" fill="#50b0f0"/>
+          </svg>
+        </button>
+        <button class="tb-btn" id="search-btn" title="Suchen">🔍</button>
+        <!-- pinned + running apps injected here -->
+        <div id="tb-apps"></div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-tray" id="tray-icons">
+          <span id="tray-net" title="Netzwerk">📶</span>
+          <span id="tray-vol" title="Lautstärke">🔊</span>
+          <span id="tray-bat" title="Akku">🔋</span>
+        </div>
+        <div class="tb-clock" id="tb-clock">
+          <div id="tb-time">--:--</div>
+          <div id="tb-date">--.--.----</div>
+        </div>
+        <div class="tb-showdesktop" id="show-desktop" title="Desktop anzeigen"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shutdown overlay -->
+  <div id="shutdown-screen" class="screen hidden">
+    <div class="boot-spinner"></div>
+    <div class="boot-text" id="shutdown-text">Wird heruntergefahren…</div>
+  </div>
+
+  <script src="js/icons.js?v=5"></script>
+  <script src="js/fs.js?v=5"></script>
+  <script src="js/wm.js?v=5"></script>
+  <script src="js/apps.js?v=5"></script>
+  <script src="js/apps2.js?v=5"></script>
+  <script src="js/main.js?v=5"></script>
+  <script src="js/extras.js?v=5"></script>
+</body>
+</html>
