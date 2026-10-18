@@ -14,15 +14,38 @@
 /* ------------------------------------------------------------------ */
 /* TERMINAL  — built-in interpreter + optional real shell bridge       */
 /* ------------------------------------------------------------------ */
-const BRIDGE_URL = 'http://localhost:8124';
-const Bridge = { connected:false,
-  async ping(){ try{ const r = await fetch(BRIDGE_URL+'/ping',{signal:AbortSignal.timeout(800)}); this.connected = r.ok; }catch(e){ this.connected=false; } return this.connected; },
+/* Die Bridge (bridge.py) verlangt ein Sitzungs-Token. Sie gibt beim Start eine URL
+   mit #bridge=<token>&port=<port> aus; das Token wird hier übernommen, für diesen
+   Tab in sessionStorage gemerkt und sofort aus der Adresszeile entfernt.
+   Ohne Token fragt die App die Bridge gar nicht erst an (z. B. auf GitHub Pages). */
+const Bridge = { connected:false, token:null, url:'http://127.0.0.1:8124',
+  init(){
+    try{
+      const h = new URLSearchParams(location.hash.slice(1));
+      const t = h.get('bridge'), p = h.get('port') || '8124';
+      if(t && /^[A-Za-z0-9_-]{20,}$/.test(t) && /^\d{2,5}$/.test(p)){
+        sessionStorage.setItem('win12_bridge', JSON.stringify({t, p}));
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+      const saved = JSON.parse(sessionStorage.getItem('win12_bridge') || 'null');
+      if(saved){ this.token = saved.t; this.url = 'http://127.0.0.1:' + saved.p; }
+    }catch(e){ this.token = null; }
+  },
+  headers(extra){ return Object.assign({'X-Bridge-Token': this.token}, extra||{}); },
+  async ping(){
+    if(!this.token){ this.connected=false; return false; }
+    try{ const r = await fetch(this.url+'/ping',{headers:this.headers(), signal:AbortSignal.timeout(800)}); this.connected = r.ok; }
+    catch(e){ this.connected=false; }
+    return this.connected;
+  },
   async exec(cmd, cwd){
-    const r = await fetch(BRIDGE_URL+'/exec',{ method:'POST', headers:{'Content-Type':'application/json'},
+    const r = await fetch(this.url+'/exec',{ method:'POST', headers:this.headers({'Content-Type':'application/json'}),
       body: JSON.stringify({cmd, cwd}) });
+    if(!r.ok) throw new Error(r.status===401 ? 'Token ungültig (Bridge neu gestartet?) – App über die neue Bridge-URL öffnen' : 'HTTP '+r.status);
     return r.json(); // { stdout, stderr, cwd }
   }
 };
+Bridge.init();
 
 APPS.terminal = {
   title:'Terminal', icon: ICONS.terminal, width:760, height:460,
@@ -83,7 +106,7 @@ APPS.terminal = {
       if(lc==='bridge'){ return showBridge(); }
       if(lc==='open'||lc==='start'){ if(APPS[arg]){ WM.open(arg); println('Öffne '+arg+'…','ok'); } else println('Apps: '+Object.keys(APPS).join(', '),'err'); return; }
       if(lc==='exit'){ WM.close(win.id); return; }
-      if(lc==='realmode'){ win.state.real = arg!=='off' && await Bridge.ping(); println(win.state.real?'Echtmodus AN':'Echtmodus AUS', win.state.real?'ok':'warn'); return; }
+      if(lc==='realmode'){ win.state.real = arg!=='off' && await Bridge.ping(); println(win.state.real?'Echtmodus AN':(arg!=='off'&&!Bridge.token?'Kein Bridge-Token – tippe bridge für die Anleitung.':'Echtmodus AUS'), win.state.real?'ok':'warn'); return; }
 
       // ---- real shell via bridge ----
       if(win.state.real){
@@ -185,10 +208,12 @@ APPS.terminal = {
 `<b>Echte Befehlsausführung aktivieren:</b>
 1. Öffne ein echtes Terminal im Projektordner Windows12/
 2. Starte:  <span class="ok">python3 bridge.py</span>
-3. Klicke hier und tippe einen Befehl — er läuft jetzt WIRKLICH auf deinem Mac.
+3. Öffne die URL, die die Bridge ausgibt (http://127.0.0.1:8124/#bridge=…).
+   Sie enthält ein Zufallstoken, das bei jedem Start neu erzeugt wird.
+4. Terminal öffnen und einen Befehl tippen — er läuft jetzt WIRKLICH auf deinem Rechner.
 
-Der Bridge-Server (bridge.py liegt im Projektordner) lauscht nur auf localhost:8124
-und führt Befehle in einer echten zsh/bash-Shell aus.
+Status: ${Bridge.token ? (Bridge.connected ? '<span class="ok">verbunden</span>' : 'Token vorhanden, Bridge nicht erreichbar') : 'kein Token'}
+Die Bridge lauscht nur auf 127.0.0.1, prüft Host und Origin und führt ohne Token nichts aus.
 <span class="warn">⚠ Achtung: Das führt echte Systembefehle aus. Nur auf deinem eigenen Rechner nutzen.</span>`); }
 
     newPrompt();
