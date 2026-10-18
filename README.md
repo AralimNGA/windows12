@@ -20,7 +20,7 @@ This is a fan project and is not affiliated with or endorsed by Microsoft. Windo
 - **Games & utilities** — A fully playable Minesweeper, Task Manager, Clock, Photo Viewer, and Recycle Bin.
 - **Command palette** (`Ctrl+Space`) — Search apps, files, and the web, plus inline calculations.
 - **Copilot assistant** (`Ctrl+/`) — A rule-based chatbot that opens apps, changes the theme, performs calculations, fetches the weather, and searches the web.
-- **Live weather** — Real weather data via the keyless Open-Meteo API, shown in the taskbar and widgets.
+- **Live weather** — Real weather data for a fixed location (Berlin) via the keyless Open-Meteo API, shown in the taskbar and widgets.
 - **Personalization** — Light/dark mode, accent colors, multiple wallpapers, and an animated gradient-blob background.
 - **System shell** — Boot, login, and shutdown screens, an action center, a calendar flyout, toast notifications, and selectable desktop icons.
 - **Visual design** — A Fluent-style SVG icon set and a glassmorphism aesthetic.
