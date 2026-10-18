@@ -6,6 +6,8 @@ Windows12 is a browser-based desktop operating system simulation built with pure
 
 > Note: The user interface is in German.
 
+This is a fan project and is not affiliated with or endorsed by Microsoft. Windows, Edge and Copilot are trademarks of Microsoft.
+
 ## Features
 
 - **Window manager** — Move, resize (8 handles), minimize, maximize, and snap layouts (edge docking, half/quarter tiling).
@@ -78,6 +80,7 @@ The bridge executes arbitrary commands with your user rights, so it is locked do
 - **Host header check.** Requests whose `Host` is not `127.0.0.1:<port>` or `localhost:<port>` are rejected, which blocks DNS rebinding.
 - **Session token.** `/ping` and `/exec` require the `X-Bridge-Token` header with a random token generated at startup (256 bit, compared in constant time). `/exec` also requires `Content-Type: application/json`, so a plain HTML form cannot trigger it.
 - **Minimal file serving.** Only `index.html`, `css/` and `js/` are served; dotfiles, `bridge.py` and anything outside the project folder return 404.
+- **Escaped web content.** The browser app inserts search suggestions and results from DuckDuckGo and Wikipedia as escaped text and opens only `http(s)` links, so a crafted result cannot run script in the page that holds the token.
 
 Without a token the web app never contacts the bridge. Still: anyone who has the token can run commands as you, so don't share the URL, run the bridge only on your own machine and stop it after use. Earlier versions of `bridge.py` (before October 2026) sent `Access-Control-Allow-Origin: *` and had no token, so any open website could run commands while the bridge was running; don't use those versions.
 

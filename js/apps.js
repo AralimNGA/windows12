@@ -4,6 +4,11 @@
    =================================================================== */
 const APPS = {};
 
+/* Escaping for values from user input or external APIs (DuckDuckGo, Wikipedia) before they go into HTML */
+const escHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* only http(s) links may be opened or embedded */
+const safeHttpUrl = u => (/^https?:\/\//i.test(String(u ?? '')) ? String(u) : '');
+
 /* ------------------------------------------------------------------ */
 /* ABOUT / WILLKOMMEN                                                  */
 /* ------------------------------------------------------------------ */
@@ -391,7 +396,7 @@ APPS.browser = {
         target = q.includes('.')&&!q.includes(' ') ? 'https://'+q : 'https://www.google.com/search?q='+encodeURIComponent(q);
       }
       url.value = target;
-      content.innerHTML = `<iframe class="br-frame" src="${target}" referrerpolicy="no-referrer"></iframe>`;
+      content.innerHTML = `<iframe class="br-frame" src="${escHtml(safeHttpUrl(target))}" referrerpolicy="no-referrer"></iframe>`;
       const frame = content.querySelector('iframe');
       // many sites block iframes — offer real-tab fallback
       setTimeout(()=>{
@@ -402,7 +407,8 @@ APPS.browser = {
     function fallback(target){
       content.innerHTML = `<div class="br-home"><h1>🚫</h1>
         <p style="text-align:center">Diese Seite kann nicht eingebettet werden.</p>
-        <button class="br-search" style="cursor:pointer" onclick="window.open('${target}','_blank')">In neuem Tab öffnen ↗</button></div>`;
+        <button class="br-search" style="cursor:pointer" data-open>In neuem Tab öffnen ↗</button></div>`;
+      content.querySelector('[data-open]').onclick = ()=>{ const u = safeHttpUrl(target); if(u) window.open(u,'_blank','noopener'); };
     }
     url.addEventListener('keydown',e=>{ if(e.key==='Enter') navigate(url.value); });
     body.querySelector('[data-act=go]').onclick=()=>navigate(url.value);

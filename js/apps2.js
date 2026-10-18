@@ -271,8 +271,8 @@ APPS.browser = {
 
     function navigate(target){
       url.value=target;
-      content.innerHTML = `<div class="br-loading">Lade ${target} …<br><small>Viele Seiten erlauben kein Einbetten — dann öffnet sich ein echter Tab.</small></div>
-        <iframe class="br-frame" src="${target}" referrerpolicy="no-referrer" style="display:none"></iframe>`;
+      content.innerHTML = `<div class="br-loading">Lade ${escHtml(target)} …<br><small>Viele Seiten erlauben kein Einbetten — dann öffnet sich ein echter Tab.</small></div>
+        <iframe class="br-frame" src="${escHtml(safeHttpUrl(target))}" referrerpolicy="no-referrer" style="display:none"></iframe>`;
       const f = content.querySelector('iframe');
       let loaded=false;
       f.onload = ()=>{ loaded=true; content.querySelector('.br-loading')?.remove(); f.style.display='block'; };
@@ -280,25 +280,25 @@ APPS.browser = {
         content.innerHTML = `<div class="br-home"><div class="br-logo">🚫</div>
           <p class="br-note">Diese Seite verbietet das Einbetten.</p>
           <button class="br-search" style="cursor:pointer;max-width:320px" data-open>In echtem Tab öffnen ↗</button></div>`;
-        content.querySelector('[data-open]').onclick=()=>window.open(target,'_blank');
+        content.querySelector('[data-open]').onclick=()=>{ const u=safeHttpUrl(target); if(u) window.open(u,'_blank','noopener'); };
       }}, 2500);
     }
 
     async function search(q){
       url.value = q;
       sug.classList.add('hidden');
-      content.innerHTML = `<div class="br-results"><div class="br-loading">Suche nach „${q}" …</div></div>`;
+      content.innerHTML = `<div class="br-results"><div class="br-loading">Suche nach „${escHtml(q)}" …</div></div>`;
       const wrap = content.querySelector('.br-results');
       const gUrl = 'https://www.google.com/search?q='+encodeURIComponent(q);
-      let html = `<div class="br-resbar"><b>Ergebnisse für „${q}"</b>
+      let html = `<div class="br-resbar"><b>Ergebnisse für „${escHtml(q)}"</b>
         <button class="br-google" data-g>Auf Google öffnen ↗</button></div>`;
 
       // DuckDuckGo instant answer
       let answer = '';
       try{
         const d = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`).then(r=>r.json());
-        if(d.AbstractText){ answer = `<div class="br-answer"><b>${d.Heading||q}</b><p>${d.AbstractText}</p>
-          ${d.AbstractURL?`<a href="#" data-ext="${d.AbstractURL}">${d.AbstractSource||'Quelle'} ↗</a>`:''}</div>`; }
+        if(d.AbstractText){ answer = `<div class="br-answer"><b>${escHtml(d.Heading||q)}</b><p>${escHtml(d.AbstractText)}</p>
+          ${safeHttpUrl(d.AbstractURL)?`<a href="#" data-ext="${escHtml(d.AbstractURL)}">${escHtml(d.AbstractSource||'Quelle')} ↗</a>`:''}</div>`; }
       }catch(e){}
 
       // Wikipedia (real results with images)
@@ -310,19 +310,20 @@ APPS.browser = {
           // summary + thumb of first
           if(!answer){ try{
             const sum = await fetch(`https://de.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(titles[0])}`).then(r=>r.json());
-            answer = `<div class="br-answer">${sum.thumbnail?`<img src="${sum.thumbnail.source}">`:''}<div><b>${sum.title}</b><p>${sum.extract||''}</p>
-              <a href="#" data-ext="${sum.content_urls?.desktop?.page||urls[0]}">Auf Wikipedia lesen ↗</a></div></div>`;
+            const thumb = safeHttpUrl(sum.thumbnail?.source);
+            answer = `<div class="br-answer">${thumb?`<img src="${escHtml(thumb)}" alt="">`:''}<div><b>${escHtml(sum.title)}</b><p>${escHtml(sum.extract||'')}</p>
+              <a href="#" data-ext="${escHtml(sum.content_urls?.desktop?.page||urls[0])}">Auf Wikipedia lesen ↗</a></div></div>`;
           }catch(e){} }
-          results = titles.map((t,i)=>`<div class="br-result" data-ext="${urls[i]}">
-            <div class="br-rtitle">${t}</div><div class="br-rurl">${urls[i]}</div>
-            <div class="br-rdesc">${descs[i]||''}</div></div>`).join('');
+          results = titles.map((t,i)=>`<div class="br-result" data-ext="${escHtml(urls[i])}">
+            <div class="br-rtitle">${escHtml(t)}</div><div class="br-rurl">${escHtml(urls[i])}</div>
+            <div class="br-rdesc">${escHtml(descs[i]||'')}</div></div>`).join('');
         }
       }catch(e){}
 
       if(!answer && !results) html += `<div class="br-answer"><p>Keine direkten Treffer im Sandbox-Modus. Nutze „Auf Google öffnen".</p></div>`;
       wrap.innerHTML = html + answer + results;
       wrap.querySelector('[data-g]').onclick = ()=>window.open(gUrl,'_blank');
-      wrap.querySelectorAll('[data-ext]').forEach(el=> el.onclick=(e)=>{ e.preventDefault(); window.open(el.dataset.ext,'_blank'); });
+      wrap.querySelectorAll('[data-ext]').forEach(el=> el.onclick=(e)=>{ e.preventDefault(); const u=safeHttpUrl(el.dataset.ext); if(u) window.open(u,'_blank','noopener'); });
     }
 
     let sugTimer;
@@ -334,7 +335,7 @@ APPS.browser = {
           const arr = await fetch(`https://duckduckgo.com/ac/?q=${encodeURIComponent(q)}&type=list`).then(r=>r.json());
           const items = (arr[1]||arr.map?.(x=>x.phrase)||[]).slice(0,6);
           if(!items.length){ sug.classList.add('hidden'); return; }
-          sug.innerHTML = items.map(s=>`<div class="br-sg">🔍 ${s}</div>`).join('');
+          sug.innerHTML = items.map(s=>`<div class="br-sg">🔍 ${escHtml(s)}</div>`).join('');
           sug.classList.remove('hidden');
           sug.querySelectorAll('.br-sg').forEach((el,i)=> el.onclick=()=>{ sug.classList.add('hidden'); search(items[i]); });
         }catch(e){ sug.classList.add('hidden'); }
@@ -398,7 +399,7 @@ APPS.browser = {
       if(push){ win.state.hist = win.state.hist.slice(0, win.state.hi+1); win.state.hist.push(url); win.state.hi = win.state.hist.length-1; }
       win.state.current = url;
       urlIn.value = url.replace('?igu=1&','?').replace(/[?&]igu=1/,'').replace('/webhp','');
-      content.innerHTML = `<iframe class="br-frame" src="${url}" referrerpolicy="no-referrer" allow="fullscreen"></iframe>`;
+      content.innerHTML = `<iframe class="br-frame" src="${escHtml(safeHttpUrl(url))}" referrerpolicy="no-referrer" allow="fullscreen"></iframe>`;
     }
     function go(input){
       input = (input||'').trim(); if(!input) return;
@@ -438,7 +439,7 @@ APPS.browser = {
           const arr = await fetch(`https://duckduckgo.com/ac/?q=${encodeURIComponent(q)}&type=list`).then(r=>r.json());
           const items = (arr[1]||[]).slice(0,6);
           if(!items.length){ sug.classList.add('hidden'); return; }
-          sug.innerHTML = items.map(s=>`<div class="br-sg">🔍 ${s}</div>`).join('');
+          sug.innerHTML = items.map(s=>`<div class="br-sg">🔍 ${escHtml(s)}</div>`).join('');
           sug.classList.remove('hidden');
           sug.querySelectorAll('.br-sg').forEach((el,i)=> el.onmousedown=()=>{ sug.classList.add('hidden'); go(items[i]); });
         }catch(e){ sug.classList.add('hidden'); }
